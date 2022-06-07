@@ -1,6 +1,6 @@
 /*
-  ** @file           : doip_server.h
-  ** @brief          : data server header file
+  ** @file           : execute_result.h
+  ** @brief          : execute result header file
   **
   ** @attention
   **
@@ -18,14 +18,20 @@
 */
 
 
-#ifndef __DOIP_SERVER_H__
-#define __DOIP_SERVER_H__
+#ifndef __EXECUTE_RESULT_H__
+#define __EXECUTE_RESULT_H__
 
 
-#include "data_types.h"
+typedef enum {
+    SUCCESS = 0,
+    FAILURE,
+    TIMEOUT,
+};
+
 
 
 #endif
+
 
 
 /*
