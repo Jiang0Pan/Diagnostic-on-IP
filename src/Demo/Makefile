@@ -1,21 +1,20 @@
-TARGET = libdoip_server.so
+TARGET = doip_server
 CC = gcc 
 AR = ar rcs
-CFLASS = -Wall 
-LIBS = -lpthread
+CFLASS = -Wall
+LIBS = -ldoip_server
 
 # header file
 INCS = -I./include/
 
 #source file
-SRCS := $(wildcard ./source/*.c)
+SRCS := $(wildcard ./*.c)
 COBJS := $(SRCS:.c=.o)
 
 all:$(TARGET)
 
 $(TARGET):$(COBJS)
-	$(CC) $(COBJS) $(LIBS) -shared -fPIC -o $(TARGET)
-	cp $(TARGET) /usr/lib
+	$(CC) $(COBJS) $(LIBS) -o $(TARGET)
 
 $(COBJS):%.o:%.c
 	$(CC) -c $< -o $@ $(INCS) $(CFLASS)
