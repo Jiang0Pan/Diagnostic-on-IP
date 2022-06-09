@@ -29,11 +29,33 @@
 #include "log.h"
 
 
+typedef struct log_handle {
+  char * log_buf;
+  char * log_temp_buf;
+  UINT32 log_len;
+  UINT32 log_temp_len;
+  UINT32 log_max_size;
+  UINT32 log_temp_max_size;
+  pthread_mutex_t log_mutex;
+  pthread_cond_t log_cond;
+} log_handle;
+
+typedef struct log_file_handle {
+  log_handle log;
+  char * log_file_name;
+  FILE * log_file;
+  log_level level;
+  pthread_t log_pthread;
+  pthread_mutex_t log_file_mutex;
+} log_file_handle;
+
+
 static log_file_handle * g_log_fhandle = NULL;
 
 static UINT8 log_handle_init(log_handle * log);
 static void * log_file_pthread(void * arg);
 static UINT8 write_log_file(log_file_handle * log_fhandle);
+
 
 UINT8 log_file_handle_init(char * file_name)
 {
@@ -68,6 +90,11 @@ UINT8 log_file_handle_init(char * file_name)
   g_log_fhandle->level = LOG_OFF_LEVEL;
   pthread_create(&(g_log_fhandle->log_pthread), NULL, log_file_pthread, (void *)g_log_fhandle);
 
+  g_log_fhandle->log_file = fopen(g_log_fhandle->log_file_name, "w");
+  if (g_log_fhandle->log_file == NULL) {
+    return FAILURE;
+  }
+
 	return SUCCESS;
 }
 
@@ -100,9 +127,9 @@ UINT8 log_base(log_level level, const char * file, int line, const char * fmt, .
 
       memset(g_log_fhandle->log.log_temp_buf, 0, g_log_fhandle->log.log_temp_len);
 
-      sprintf(g_log_fhandle->log.log_temp_buf, "[%s] %s %d:", ctime(&temp_time), file, line);
-      g_log_fhandle->log.log_temp_len = strlen(g_log_fhandle->log.log_temp_buf);
-      g_log_fhandle->log.log_temp_buf[g_log_fhandle->log.log_temp_len - 1] = '\0';
+      sprintf(g_log_fhandle->log.log_temp_buf, "[%s", ctime(&temp_time));
+      g_log_fhandle->log.log_temp_len = strlen(g_log_fhandle->log.log_temp_buf) - 1;
+      sprintf(g_log_fhandle->log.log_temp_buf + g_log_fhandle->log.log_temp_len, "] file:%s line:%d :", file, line);
 
       va_list args;
       va_start(args, fmt);
@@ -110,9 +137,14 @@ UINT8 log_base(log_level level, const char * file, int line, const char * fmt, .
       va_end(args);
 
       g_log_fhandle->log.log_temp_len = strlen(g_log_fhandle->log.log_temp_buf);
+      sprintf(g_log_fhandle->log.log_temp_buf + g_log_fhandle->log.log_temp_len, "\n");
 
-      memcpy(g_log_fhandle->log.log_buf, g_log_fhandle->log.log_temp_buf, g_log_fhandle->log.log_temp_len);
-      g_log_fhandle->log.log_len = g_log_fhandle->log.log_temp_len;
+      if (g_log_fhandle->log.log_len + g_log_fhandle->log.log_temp_len > g_log_fhandle->log.log_max_size) {
+        g_log_fhandle->log.log_len = 0;
+      }
+      memcpy(g_log_fhandle->log.log_buf + g_log_fhandle->log.log_len, g_log_fhandle->log.log_temp_buf, \
+          g_log_fhandle->log.log_temp_len);
+      g_log_fhandle->log.log_len += g_log_fhandle->log.log_temp_len;
       
       pthread_mutex_unlock(&(g_log_fhandle->log.log_mutex));
       pthread_cond_signal(&(g_log_fhandle->log.log_cond));
@@ -168,26 +200,23 @@ static void * log_file_pthread(void * arg)
 
 static UINT8 write_log_file(log_file_handle * log_fhandle)
 {
-  int ret = 0;
   UINT8 res = FAILURE;
+  int fd = -1;
 
   if(pthread_mutex_lock(&(log_fhandle->log_file_mutex)) == 0) {
 
-    log_fhandle->log_file = fopen(log_fhandle->log_file_name, "a+");
-    if (NULL != log_fhandle->log_file) {
-      ret = fwrite(log_fhandle->log.log_buf, log_fhandle->log.log_len, 1, log_fhandle->log_file);
-      if (ret == log_fhandle->log.log_len) {
-        memset(log_fhandle->log.log_buf, 0, log_fhandle->log.log_len);
-        log_fhandle->log.log_len = 0;
-        fclose(log_fhandle->log_file);
-        log_fhandle->log_file = NULL;
-
-        res = SUCCESS;
-      }
-      else {
-        res = FAILURE;
-      }
+    if (log_fhandle->log_file != NULL) {
+      fprintf(log_fhandle->log_file, "%s\n", log_fhandle->log.log_buf);
+      fflush(log_fhandle->log_file);
+      fd = fileno(log_fhandle->log_file);
+	    fsync(fd);
     }
+    else {
+      printf("%s\n", log_fhandle->log.log_buf);
+    }
+
+    memset(log_fhandle->log.log_buf, 0, log_fhandle->log.log_len);
+    log_fhandle->log.log_len = 0;
 
     pthread_mutex_unlock(&(log_fhandle->log_file_mutex));
   }

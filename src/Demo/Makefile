@@ -21,3 +21,4 @@ $(COBJS):%.o:%.c
 
 clean:
 	rm $(TARGET) $(COBJS)
+	rm demo.log

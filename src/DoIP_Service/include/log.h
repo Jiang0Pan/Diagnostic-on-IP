@@ -53,27 +53,6 @@ typedef enum {
 #define     log_emerg(...)             log_base(LOG_EMERG_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
 
 
-typedef struct log_handle {
-  char * log_buf;
-  char * log_temp_buf;
-  UINT32 log_len;
-  UINT32 log_temp_len;
-  UINT32 log_max_size;
-  UINT32 log_temp_max_size;
-  pthread_mutex_t log_mutex;
-  pthread_cond_t log_cond;
-} log_handle;
-
-typedef struct log_file_handle {
-  log_handle log;
-  char * log_file_name;
-  FILE * log_file;
-  log_level level;
-  pthread_t log_pthread;
-  pthread_mutex_t log_file_mutex;
-} log_file_handle;
-
-
 UINT8 log_file_handle_init(char * file_name);
 UINT8 set_log_level(log_level level);
 UINT8 log_base(log_level level, const char * file, int line, const char * fmt, ...);  
