@@ -5,10 +5,12 @@ CFLASS = -Wall
 LIBS = -lpthread
 
 # header file
-INCS = -I./include/
+INCS = -I./adapter/include -I./common/include/ -I./doip/include -I./interface/include\
+	   -I./soad/include -I./uds/include
 
 #source file
-SRCS := $(wildcard ./source/*.c)
+SRCS := $(wildcard ./adapter/source/*.c ./common/source/*.c ./doip/source/*.c \
+		./interface/*.c ./soad/source/*.c ./uds/source)
 COBJS := $(SRCS:.c=.o)
 
 all:$(TARGET)

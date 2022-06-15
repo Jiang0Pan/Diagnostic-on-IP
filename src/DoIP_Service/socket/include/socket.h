@@ -1,6 +1,6 @@
 /*
-  ** @file           : execute_result.h
-  ** @brief          : execute result header file
+  ** @file           : soad_socket.h
+  ** @brief          : soad socket header file
   **
   ** @attention
   **
@@ -11,27 +11,32 @@
   **
   ** Release notes:
   ******************************************************************
-  **                 date: 2022-06-07
+  **                 date: 2022-06-10
   **                 author: Jex
   **                 note: first create 
   ******************************************************************
 */
 
 
-#ifndef __EXECUTE_RESULT_H__
-#define __EXECUTE_RESULT_H__
+#ifndef  __SOCKET_H__
+#define  __SOCKET_H__
 
 
-typedef enum {
-    SUCCESS = 0,
-    FAILURE,
-    TIMEOUT,
-}execute_result;
+#include "data_types.h"
 
+
+ 
+typedef struct socket_handle {
+  int handle;
+  int connect_handle;
+  int target_address;
+  int target_port;
+  int state;
+  int socker_type;
+}socker_handle;
 
 
 #endif
-
 
 
 /*

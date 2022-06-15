@@ -2,7 +2,7 @@ TARGET = doip_server
 CC = gcc 
 AR = ar rcs
 CFLASS = -Wall
-LIBS = -ldoip_server
+LIBS = -ldoip_server -lpthread
 
 # header file
 INCS = -I./include/

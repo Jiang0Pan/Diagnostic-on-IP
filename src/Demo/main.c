@@ -20,13 +20,23 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "log.h"
 #include "execute_result.h"
+
+
+void * log_loop(void * arg)
+{
+  while(1) {
+     log_debug("test0\n");   
+  }
+}
 
 
 int main(int argc, char * argv[])
 {
   UINT8 res = FAILURE;
+  pthread_t log_test;
 
   res = log_file_handle_init("./demo.log");
   if (SUCCESS != res) {
@@ -40,9 +50,10 @@ int main(int argc, char * argv[])
     return -1;
   }
 
+  pthread_create(&log_test, NULL, log_loop, NULL);
+
   while(1) {
-    log_debug("test");
-    sleep(1);
+    log_debug("test1\n");
   }
 
   return 0;
